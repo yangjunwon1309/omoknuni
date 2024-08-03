@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QA View</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background-color: white;
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            text-align: left;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .view-question, .view-answer {
+            margin-bottom: 20px;
+        }
+
+        .view-question h3, .view-answer h3 {
+            margin-bottom: 10px;
+        }
+
+        .view-question p, .view-answer p {
+            background-color: #fffbea;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap; /* Preserve whitespace and line breaks */
+        }
+        .buttons {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+
+        .buttons button {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 5px;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+        .back-btn {
+            background-color: gray;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            display: block;
+        }
+        .floating-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #d4f1c5;
+            color: #333;
+            border: none;
+            border-radius: 50%;
+            width: 100px;
+            height: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        .floating-button:hover {
+            background-color: #c0e8b2;
+        }
+        @media (max-width: 600px) {
+            .view-question {
+                padding: 15px;
+            }
+            .view-answer {
+                padding: 15px;
+            }
+            .question {
+                font-size: 1em;
+            }
+
+            .answer {
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>질문과 답변 보기</h2>
+        <div class="view-question">
+            <h3>질문</h3>
+            <p id="question">{{question}}</p>
+        </div>
+        <div class="view-answer">
+            <h3>답변</h3>
+            <p id="answer">{{answer}}</p>
+        </div>
+        <div class="buttons">
+            <button class="back-btn" onclick="goBack()">뒤로가기</button>
+            <button class="back-btn" onclick="editText('{{_id}}')">수정하기</button>
+        </div>
+        <button class="floating-button" onclick="window.location.href='/chat'">대화하기</button>
+    </div>
+
+    <script>
+        function goBack() {
+            window.history.back();
+        }
+
+        answer = document.getElementById('answer').innerText;
+        document.getElementById('answer').innerText = answer.replace(/(\d+)\./g, '\n$1.');
+
+        async function editText(_id) {
+        try {
+                const redirectUrl = `/edit/${_id}`;
+                window.location.href = redirectUrl;
+            } catch (error) {
+                console.error('Error:', error);
+            }
+    }
+    </script>
+</body>
+</html>
