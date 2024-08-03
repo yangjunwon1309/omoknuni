@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit QA</title>
+    <style>
+ body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    margin: 0;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.container {
+    background-color: white;
+    width: 100%;
+    max-width: 400px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 1.5em;
+    color: #333;
+}
+
+.input-group {
+    margin-bottom: 15px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #555;
+}
+
+.input-group input, .input-group textarea {
+    width: 100%;
+    padding: 12px;
+    box-sizing: border-box;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1em;
+    background-color: #f9f9f9;
+    transition: border-color 0.3s;
+}
+
+.input-group input:focus, .input-group textarea:focus {
+    border-color: #4caf50;
+    outline: none;
+}
+
+.input-group textarea {
+    resize: vertical;
+    height: 150px;
+}
+
+.buttons {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+
+.buttons button {
+    flex: 1;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1em;
+    margin: 5px;
+    transition: background-color 0.3s, transform 0.3s;
+}
+
+.buttons .save-btn {
+    background-color: #4caf50;
+    color: white;
+}
+
+.buttons .save-btn:hover {
+    background-color: #45a049;
+    transform: translateY(-2px);
+}
+
+.buttons .cancel-btn {
+    background-color: #f44336;
+    color: white;
+}
+
+.buttons .cancel-btn:hover {
+    background-color: #e53935;
+    transform: translateY(-2px);
+}
+
+.buttons .back-btn {
+    background-color: gray;
+    color: white;
+    font-size : 14px;
+    margin: 0px 10px;
+    padding: 12px 12px;
+}
+
+.buttons .back-btn:hover {
+    background-color: #666;
+    transform: translateY(-2px);
+}
+.hidden-textarea {
+    color: transparent;
+    background-color: transparent;
+    caret-color: black; /* Ensures caret (cursor) is visible */
+    height : 0px;
+}
+@media (max-width: 600px) {
+    .container {
+        padding: 15px;
+    }
+
+    .buttons button {
+        font-size: 0.9em;
+        padding: 10px;
+    }
+}
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="buttons">
+            <button class="back-btn" onclick="window.location.href='/main'">돌아가기</button>
+        </div>
+            <div>
+
+    </div>
+        <h2>질문과 답변 편집</h2>
+        <div class="input-group">
+            <label for="question">질문 수정하기 <br> </label>
+            <p id="questionLabel" class = "hidden-textarea">{{question}}</p>
+            <input type="text" id="question" name="question">
+        </div>
+        <div class="input-group">
+            <label for="answer" >답변 수정하기 <br> </label>
+            <p id="answerLabel" class = "hidden-textarea">{{answer}}</p>
+            <textarea id="answer" name="answer" rows="10" cols="50"></textarea>
+        </div>
+        <div class="buttons">
+            <button class="back-btn" onclick="copyQuestionText()">질문 및 답변 복사하기</button>
+        </div>
+        <div class="buttons">
+            <button class="save-btn" onclick="saveChanges()">수정하기</button>
+            <button class="cancel-btn" onclick="cancelEdit()">삭제하기</button>
+        </div>
+    </div>
+    <script>
+        answer = document.getElementById('answerLabel').innerText;
+        document.getElementById('answerLabel').innerText = answer.replace(/(\d+)\./g, '\n$1.');
+
+        function copyQuestionText() {
+            var labelText = document.getElementById('questionLabel').innerText;
+            var cleanedText = labelText.replace('{{id}}:', '').trim();
+            document.getElementById('question').value = cleanedText;
+            copyAnswerText();
+        }
+        function copyAnswerText() {
+            var labelText = document.getElementById('answerLabel').innerText;
+            var cleanedText = labelText.replace('답변 수정하기', '').trim();
+            document.getElementById('answer').value = cleanedText;
+        }
+
+        function escapeHtml(unsafe) {
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function escapeAndFormatText(text) {
+            return escapeHtml(text).replace(/\n/g, '<br>');
+        }
+
+        function loadQA(question, answer) {
+            document.getElementById('question').textContent = question;
+            document.getElementById('answer').textContent = answer;
+        }
+
+
+        async function saveChanges() {
+            const updatedQuestion = document.getElementById('question').value;
+            const updatedAnswer = document.getElementById('answer').value;
+            console.log('{{_id}}');
+            var id_edit = '{{_id}}';
+            var edit = {
+                idedit: id_edit,
+                updatedQuestion: updatedQuestion,
+                updatedAnswer: updatedAnswer
+            };
+
+            try {
+                const response = await fetch('/editmessage', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(edit)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+            }
+
+
+            window.location.href = '/main'; // 저장 후 메인 페이지로 이동
+        }
+
+        async function cancelEdit() {
+            try {
+                const response = await fetch('/delmessage', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: '{{_id}}'
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+            }
+            window.location.href = '/main';
+        }
+
+
+    </script>
+</body>
+</html>

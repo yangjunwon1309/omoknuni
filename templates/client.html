@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .chat-container {
+            width: 100%;
+            max-width: 600px;
+            background-color: white;
+            margin-bottom : 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            border-bottom: 1px solid #ddd;
+        }
+        .messages ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        .messages li {
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+        }
+        .messages li:nth-child(odd) {
+            background-color: #d0d0d0;
+        }
+        .messages .question {
+            font-weight: bold;
+            color: #333;
+        }
+        .messages .answer {
+            margin-top: 5px;
+            color: #555;
+        }
+        .input-container {
+            justify-content: center;
+            display: flex;
+            padding: 10px;
+            background-color: #f7f7f7;
+        }
+        .input-container input {
+            flex: 1;
+            padding: 10px;
+            width : 40vh;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+        .input-container button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+        .input-container button:hover {
+            background-color: #45a049;
+        }
+        .loading {
+            justify-content: center;
+            display: none;
+            font-size: 14px;
+            color: #666;
+        }
+        .register-button{
+            border : 0px;
+            padding : 7px;
+            background-color: lightgreen;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="messages" id="messages">
+            <ul></ul>
+        </div>
+        <div class="loading" id="loading">Loading...</div>
+        <div class="input-container">
+            <form action="" onsubmit="sendMessage(event)">
+                <input type="text" id="messageText" autocomplete="off" placeholder="Type your message here..."/>
+                <button>Send</button>
+            </form>
+        </div>
+        <button class="register-button" onclick="window.location.href='/main'">메인으로 돌아가기</button>
+    </div>
+    <script>
+        var ws = new WebSocket("ws://localhost:8000/ws");
+        var messageInProgress = false;
+        ws.onopen = function(event) {
+            console.log("WebSocket is open now.");
+        };
+
+        ws.onmessage = function(event) {
+            var loading = document.getElementById('loading');
+            var messages = document.getElementById('messages').querySelector('ul');
+            var input = document.getElementById("messageText");
+            var sendButton = document.getElementById("sendButton");
+            var messageItems = messages.querySelectorAll('li');
+
+            var content_x = document.createElement('span');
+            content_x.className = 'answer';
+            content_x.textContent = event.data;
+
+            var message_x = messageItems[messageItems.length - 1]
+
+            message_x.appendChild(document.createElement('br'));
+            message_x.appendChild(content_x);
+            message_x.onclick = function() {
+                submitAnswer(message_x);
+            };
+
+            messages.appendChild(message_x);
+
+            loading.style.display = 'none';
+            input.disabled = false;
+
+            messages.scrollTop = messages.scrollHeight;
+            messageInProgress = false;
+        };
+
+        function sendMessage(event) {
+            if (messageInProgress) {
+                console.log("Message already in progress. Please wait.");
+                event.preventDefault();
+            } else {
+            var input = document.getElementById("messageText");
+            var loading = document.getElementById('loading');
+            var sendButton = document.getElementById("sendButton");
+            var messages = document.getElementById('messages').querySelector('ul');
+            var message = document.createElement('li');
+            var question = document.createElement('span');
+            question.className = 'question';
+            question.textContent =  input.value;
+            message.appendChild(question);
+            messages.appendChild(message);
+
+            ws.send(input.value);
+
+            input.value = ' ';
+
+            messages.scrollTop = messages.scrollHeight;
+
+            loading.style.display = 'block';
+            input.disabled = true;
+            messageInProgress = true;
+
+            event.preventDefault();
+            }
+        }
+
+        async function submitAnswer(liElement) {
+            if (liElement.clickyes) {
+                liElement.style.backgroundColor = liElement.originalBackgroundColor;
+                liElement.style.border = liElement.originalBorder;
+                liElement.clickyes = false;
+            } else {
+                liElement.originalBackgroundColor = liElement.style.backgroundColor;
+                liElement.originalBorder = liElement.style.border;
+                liElement.style.backgroundColor = 'lightyellow';
+                liElement.style.border = '1px solid yellow';
+                liElement.clickyes = true;
+            }
+
+            var question = liElement.querySelector('.question').textContent;
+            var answer = liElement.querySelector('.answer').textContent;
+            var messageData = {
+                question: question,
+                answer: answer
+            };
+
+            console.log(JSON.stringify(messageData));
+            try {
+                const response = await fetch('/message', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(messageData)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const responseData = await response.json();
+                console.log('Server response:', responseData);
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+    </script>
+</body>
+</html>
